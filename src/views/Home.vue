@@ -112,7 +112,7 @@
                   <div class='inline'>
                     <md-field v-for="[auth_label,auth_key] in [['Key','auth_key'],['Value','auth_value']]" :key='auth_key'>
                       <label>{{ auth_label }}</label>
-                      <md-input v-on:change="handleChange" :name="auth_key"></md-input>
+                      <md-input v-on:change="handleChange" :name="auth_key" :value='getModel(auth_key)'></md-input>
                     </md-field>
                   </div>
                 </md-card-content>
@@ -140,7 +140,7 @@
                     <div class='inline'>
                     <md-field v-for="[label,key] in [['Key','header_key'],['Value','header_value']]" :key='key'>
                       <label>{{ label }}</label>
-                      <md-input v-on:change="handleChange" :name="key"></md-input>
+                      <md-input v-on:change="handleChange" :name="key" :value='getModel(key)'></md-input>
                     </md-field>
                       <md-button class="md-raised md-primary" style='transform: translateY(30%)' v-on:click='addHeader'>Add</md-button>
                   </div>
@@ -234,6 +234,9 @@ export default {
       this.uploaded = true;
       this.users = reply.data;
       this.fieldNames = Object.keys(reply.data[0]);
+    },
+    getModel(val) {
+      return this[val]
     },
     addHeader(val) {
       if (this.header_key == "" || this.header_value == "") return;
