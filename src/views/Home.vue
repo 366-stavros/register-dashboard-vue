@@ -34,7 +34,7 @@
           <md-tabs class="md-primary">
             <md-tab md-label="Records" v-on:click="current_tab = 'Records'"></md-tab>
             <md-tab md-label="Settings" v-on:click="current_tab = 'Settings'"></md-tab>
-            <md-tab md-label="Execute" v-on:click="executeScreen = 1"></md-tab>
+            <md-tab md-label="Execute" v-on:click="executeScreen = true"></md-tab>
 
               <md-dialog :md-active.sync="executeScreen">
 
@@ -81,7 +81,6 @@
                 v-model="users"
                 md-sort="email"
                 md-sort-order="asc"
-                @md-selected="onSelect"
               >
                 <md-table-row slot="md-table-row" slot-scope="{ item }">
                   <md-table-cell
@@ -164,7 +163,6 @@
                 v-model="extra_headers"
                 md-sort="Key"
                 md-sort-order="asc"
-                @md-selected="onSelect"
               >
                     <md-table-toolbar>
                       <h1 class="md-title">Extra Headers</h1>
@@ -199,6 +197,7 @@
           </div>
       </md-app-content>
      </md-app>
+    </div>
     </div>
 </template>
 
@@ -240,7 +239,7 @@ export default {
       this.fieldNames = Object.keys(reply.data[0]);
     },
     getModel(val) {
-      return this[val]
+      return this[val];
     },
     addHeader(val) {
       if (this.header_key == "" || this.header_value == "") return;
@@ -258,10 +257,14 @@ export default {
       this.extra_headers = this.extra_headers.filter(onlyUnique);
     },
     handleFilterChange(event) {
-      const new_users = eval(`this.users.${event.target.name == 'filter' ? 'filter' : 'map'}(record => ${event.target.value})`);
-      if(new_users) {
-        this.users_history.push(this.users)
-        this.users = new_users
+      const new_users = eval(
+        `this.users.${
+          event.target.name == "filter" ? "filter" : "map"
+        }(record => ${event.target.value})`
+      );
+      if (new_users) {
+        this.users_history.push(this.users);
+        this.users = new_users;
       }
     },
     undoUsers() {
