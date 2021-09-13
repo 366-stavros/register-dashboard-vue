@@ -75,6 +75,14 @@ io.on('connection', async socket => {
 
   socket.on('handshake', async data => {
     console.log('got data')
+    if(data.endpoint == null || data.endpoint == '') {
+      socket.emit('logdata', 'Endpoint is empty')
+      return
+    }
+    if(!data.auth || !data.auth.key || data.auth.key == '' || !data.auth.value || data.auth.value == '') {
+      socket.emit('logdata', 'Auth is empty')
+      return
+    }
     const clients = data.users
     if (data.is_async) {
       let count = 0
