@@ -103,6 +103,9 @@ io.on('connection', async socket => {
         const res = await registerClient(({ ...client, password: faker.internet.password(), portal: data.userType == 'Client' ? '1' : '2' }), data)
         socket.emit('logdata', `${client['email']}: ${JSON.stringify(res === 'Success' ? res : res.error)}`)
         console.log(client['email'], JSON.stringify(res === 'Success' ? res : res.error))
+        if(data.wait_time && data.wait_time != '') {
+          await sleep(Number.parseInt(data.wait_time))
+        }
       }
       socket.emit('logdata', 'Completed')
       socket.emit('completed', {})
