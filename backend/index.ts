@@ -7,6 +7,7 @@ import { withReference, zip } from './util'
 import socket from 'socket.io'
 import axios from 'axios'
 import faker from 'faker'
+import { EventEmitter } from 'events'
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -76,11 +77,22 @@ io.on('connection', async socket => {
     console.log('got data')
     const clients = data.users
     if (data.is_async) {
+      let count = 0
+      const myEmitter = new EventEmitter();
+      myEmitter.on('inc', () => {
+        if(count == data.users.length - 1) {
+          socket.emit('logdata', 'Completed')
+          socket.emit('completed', {})
+        } else {
+          count++
+        }
+      })
       clients.forEach(async client => {
         const res = await registerClient(({ ...client, password: faker.internet.password(), portal: data.userType == 'Client' ? '1' : '2' }), data)
         socket.emit('logdata', `${client['email']}: ${JSON.stringify(res === 'Success' ? res : res.error)}`)
         console.log(client['email'], JSON.stringify(res === 'Success' ? res : res.error))
-      })
+        myEmitter.emit('inc', {})
+      })      
     } else {
       for (let client of clients) {
         if (cancel_socket != null) {
@@ -92,8 +104,8 @@ io.on('connection', async socket => {
         socket.emit('logdata', `${client['email']}: ${JSON.stringify(res === 'Success' ? res : res.error)}`)
         console.log(client['email'], JSON.stringify(res === 'Success' ? res : res.error))
       }
+      socket.emit('logdata', 'Completed')
+      socket.emit('completed', {})
     }
-    socket.emit('logdata', 'Completed')
-    socket.emit('completed', {})
   })
 })
