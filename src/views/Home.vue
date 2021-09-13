@@ -69,12 +69,13 @@
       <div v-if="current_tab == 'Records'">
        <md-field>
       <label>records = records.filter(record => </label>
-      <md-input v-model="filter" placeholder="Type your filter here" v-on:change='handleFilterChange'></md-input>
+      <md-input v-model="filter" placeholder="Type your filter here" v-on:change='handleFilterChange' name='filter'></md-input>
     </md-field>
     <md-field>
       <label>records = records.map(record => </label>
-      <md-input v-model="mapping" placeholder="Type your mapping here" v-on:change='handleMappingChange'></md-input>
+      <md-input v-model="mapping" placeholder="Type your mapping here" v-on:change='handleFilterChange' name='mapping'></md-input>
     </md-field>
+    <md-button v-if="users_history.length > 0" class="md-raised" v-on:click='undoUsers'>Undo</md-button>
         <div class="table">
               <md-table
                 v-model="users"
@@ -98,7 +99,10 @@
       <div v-if="current_tab == 'Settings'">
         <div class='inline'>
           <md-radio v-for="userType in ['Client','Affiliate']" :key='userType' v-model="user_type" :value='userType'> {{ userType }} </md-radio>
-            <md-switch v-model="async_mode" class="md-primary">Execute Asynchronously</md-switch>
+          <md-switch v-model="async_mode" class="md-primary">Execute Asynchronously</md-switch>
+          <md-field v-if="!async_mode" style="width:5vw">
+            <md-input v-model="wait_time" placeholder="Add delay (ms)"></md-input>
+          </md-field>
         </div>
         <div>
           <table>
@@ -254,10 +258,14 @@ export default {
       this.extra_headers = this.extra_headers.filter(onlyUnique);
     },
     handleFilterChange(event) {
-      eval(`this.users = this.users.filter(record => ${event.target.value})`);
+      const new_users = eval(`this.users.${event.target.name == 'filter' ? 'filter' : 'map'}(record => ${event.target.value})`);
+      if(new_users) {
+        this.users_history.push(this.users)
+        this.users = new_users
+      }
     },
-    handleMappingChange(event) {
-      eval(`this.users = this.users.map(record => ${event.target.value})`);
+    undoUsers() {
+      this.users = this.users_history.pop()
     },
     handleChange(event) {
       this[event.target.name] = event.target.value;
@@ -284,6 +292,7 @@ export default {
         extra_headers: this.extra_headers,
         is_async: this.async_mode,
         endpoint: this.endpoint,
+        wait_time: this.wait_time,
       });
 
       socket.on("logdata", (data) => {
@@ -304,6 +313,7 @@ export default {
     socket: null,
     uploaded: false,
     users: null,
+    users_history: [],
     fieldNames: null,
     current_tab: "Records",
     user_type: "Client",
@@ -320,6 +330,7 @@ export default {
     executeScreen: false,
     logs: "",
     is_executing: false,
+    wait_time: "",
   }),
 };
 </script>
