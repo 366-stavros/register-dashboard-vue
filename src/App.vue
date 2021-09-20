@@ -15,8 +15,8 @@
 }
 
 .md-card {
-  width: 320px;
-  margin: 4px;
+  width: auto;
+  margin: 0px;
   display: block;
   margin-left: auto;
   margin-right: auto;

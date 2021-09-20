@@ -59,8 +59,7 @@ const registerClient = async (client: any, data: any): Promise<'Success' | { err
       return ({ error: err })
     }
   })
-  console.log(res['body'] ?? '')
-  return res['error'] ? ({ error: res['error'] }) : 'Success'
+  return res['error'] || res['error'] == '' ? ({ error: res['error'] == '' ? 'Empty reply from server' : res['error'] }) : 'Success'
 }
 
 const io = new socket.Server(server)
@@ -69,18 +68,18 @@ let cancel_socket = null
 io.on('connection', async socket => {
   console.log('connected')
   socket.on('abort', () => {
-    socket.emit('logdata', 'Aborted')
+    socket.emit('error', 'Aborted')
     cancel_socket = socket
   })
 
   socket.on('handshake', async data => {
     console.log('got data')
     if(data.endpoint == null || data.endpoint == '') {
-      socket.emit('logdata', 'Endpoint is empty')
+      socket.emit('error', 'Endpoint is empty')
       return
     }
     if(!data.auth || !data.auth.key || data.auth.key == '' || !data.auth.value || data.auth.value == '') {
-      socket.emit('logdata', 'Auth is empty')
+      socket.emit('error', 'Auth is empty')
       return
     }
     const clients = data.users
@@ -89,7 +88,6 @@ io.on('connection', async socket => {
       const myEmitter = new EventEmitter();
       myEmitter.on('inc', () => {
         if(count == data.users.length - 1) {
-          socket.emit('logdata', 'Completed')
           socket.emit('completed', {})
         } else {
           count++
@@ -97,7 +95,7 @@ io.on('connection', async socket => {
       })
       clients.forEach(async client => {
         const res = await registerClient(({ ...client, password: faker.internet.password(), portal: data.userType == 'Client' ? '1' : '2' }), data)
-        socket.emit('logdata', `${client['email']}: ${JSON.stringify(res === 'Success' ? res : res.error)}`)
+        socket.emit('logdata', {email: client['email'], result: JSON.stringify(res === 'Success' ? res : res.error)})
         console.log(client['email'], JSON.stringify(res === 'Success' ? res : res.error))
         myEmitter.emit('inc', {})
       })      
@@ -109,13 +107,12 @@ io.on('connection', async socket => {
           break
         }
         const res = await registerClient(({ ...client, password: faker.internet.password(), portal: data.userType == 'Client' ? '1' : '2' }), data)
-        socket.emit('logdata', `${client['email']}: ${JSON.stringify(res === 'Success' ? res : res.error)}`)
+        socket.emit('logdata', {email: client['email'], result: JSON.stringify(res === 'Success' ? res : res.error)})
         console.log(client['email'], JSON.stringify(res === 'Success' ? res : res.error))
         if(data.wait_time && data.wait_time != '') {
           await sleep(Number.parseInt(data.wait_time))
         }
       }
-      socket.emit('logdata', 'Completed')
       socket.emit('completed', {})
     }
   })
